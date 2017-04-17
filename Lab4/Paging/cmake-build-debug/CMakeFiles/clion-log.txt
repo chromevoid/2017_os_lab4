@@ -1,0 +1,4 @@
+/Applications/CLion.app/Contents/bin/cmake/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" "/Users/chrome/Documents/NYU/2017Spring/Operating System/2017_os_lab4/Lab4/Paging"
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /Users/chrome/Documents/NYU/2017Spring/Operating System/2017_os_lab4/Lab4/Paging/cmake-build-debug

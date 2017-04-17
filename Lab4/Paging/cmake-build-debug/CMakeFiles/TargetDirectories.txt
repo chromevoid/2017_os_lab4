@@ -1,0 +1,3 @@
+/Users/chrome/Documents/NYU/2017Spring/Operating System/2017_os_lab4/Lab4/Paging/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/chrome/Documents/NYU/2017Spring/Operating System/2017_os_lab4/Lab4/Paging/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/Users/chrome/Documents/NYU/2017Spring/Operating System/2017_os_lab4/Lab4/Paging/cmake-build-debug/CMakeFiles/Paging.dir
