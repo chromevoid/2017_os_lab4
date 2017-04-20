@@ -1,0 +1,36 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/chrome/Documents/NYU/2017Spring/Operating System/2017_os_lab4/Lab4/Paging/main.cpp
+paging.h
+/Users/chrome/Documents/NYU/2017Spring/Operating System/2017_os_lab4/Lab4/Paging/paging.h
+
+/Users/chrome/Documents/NYU/2017Spring/Operating System/2017_os_lab4/Lab4/Paging/paging.h
+iostream
+-
+iomanip
+-
+cstdio
+-
+string
+-
+sstream
+-
+vector
+-
+deque
+-
+queue
+-
+algorithm
+-
+limits
+-
+iostream
+-
+
