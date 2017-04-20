@@ -53,15 +53,7 @@ int main(int argc, char const *argv[]) {
             return 0;
         }
         if (debugging == 0) {
-            if (R.compare("lifo") == 0) {
-                LIFO(pFile, frame_table, frame_number, processes, P);
-            }
-            else if (R.compare("random") == 0) {
-                RANDOM(pFile, frame_table, frame_number, processes, P);
-            }
-            else if (R.compare("lru") == 0) {
-                LRU(pFile, frame_table, frame_number, processes, P);
-            }
+            Paging(pFile, frame_table, frame_number, processes, P, R);
         }
         fclose (pFile);
     } else {
