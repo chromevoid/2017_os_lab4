@@ -63,12 +63,12 @@ public:
     bool is_complete() { return complete; }
 };
 
-int randomNextReference(double A, double B, double C, int S, int w, FILE *pFile) {
+int randomNextReference(double A, double B, double C, int S, int w, FILE *pFile, bool show_detail) {
     double y;
     unsigned int r;
     if ( ! feof (pFile) )
         if ( fscanf (pFile , "%i" , &r) != EOF ) {
-            std::cout << "random number: " << r << std::endl;
+            if (show_detail) { std::cout << "random number: " << r << std::endl; }
             y = r / (INT_MAX + 1.0);
             if (y < A) {
                 return (w + 1) % S;
@@ -85,11 +85,11 @@ int randomNextReference(double A, double B, double C, int S, int w, FILE *pFile)
     return 0;
 }
 
-int randomEvictingFrame(FILE *pFile, int frame_number) {
+int randomEvictingFrame(FILE *pFile, int frame_number, bool show_detail) {
     unsigned int r;
     if ( ! feof (pFile) )
         if ( fscanf (pFile , "%i" , &r) != EOF ) {
-            std::cout << "random number: " << r << std::endl;
+            if (show_detail) { std::cout << "random number: " << r << std::endl; }
             return (r % frame_number);
         }
     return 0;
@@ -104,7 +104,7 @@ bool all_processes_are_completed(std::vector<Process> processes) {
     return true;
 }
 
-void Paging(FILE *pFile, std::vector<Frame> frame_table, int frame_number, std::vector<Process> processes, int P, std::string R) {
+void Paging(FILE *pFile, std::vector<Frame> frame_table, int frame_number, std::vector<Process> processes, int P, std::string R, bool show_detail) {
     int q = 3;
     int time_count = 0;
     while (!all_processes_are_completed(processes)) {
@@ -120,9 +120,11 @@ void Paging(FILE *pFile, std::vector<Frame> frame_table, int frame_number, std::
                 for (int j = 0; j < frame_table.size(); j++) {
                     if (frame_table[j].find_Frame(process_i, page_i)) {
                         hit = true;
-                        std::cout << process_i << " references word " << processes[i].get_R()
-                                  << " (page " << page_i << ") at time " << time_count << ": "
-                                  << "Hit in frame " << j << std::endl;
+                        if (show_detail) {
+                            std::cout << process_i << " references word " << processes[i].get_R()
+                                      << " (page " << page_i << ") at time " << time_count << ": "
+                                      << "Hit in frame " << j << std::endl;
+                        }
                         break;
                     }
                 }
@@ -134,27 +136,33 @@ void Paging(FILE *pFile, std::vector<Frame> frame_table, int frame_number, std::
                         if (frame_table[k].is_free()) {
                             frame_table[k].change_Frame(process_i, page_i);
                             free = true;
-                            std::cout << process_i << " references word " << processes[i].get_R()
-                                      << " (page " << page_i << ") at time " << time_count << ": "
-                                      << "Fault, using free frame " << k << std::endl;
+                            if (show_detail) {
+                                std::cout << process_i << " references word " << processes[i].get_R()
+                                          << " (page " << page_i << ") at time " << time_count << ": "
+                                          << "Fault, using free frame " << k << std::endl;
+                            }
                             break;
                         }
                     }
                     // if free frame doesn't exist, then pick a victim
                     if (!free) {
                         if (R.compare("lifo") == 0) {
-                            std::cout << process_i << " references word " << processes[i].get_R()
-                                      << " (page " << page_i << ") at time " << time_count << ": "
-                                      << "Fault, evicting page " << frame_table[0].get_PI()
-                                      << " of " << frame_table[0].get_PrI() << " from frame 0" << std::endl;
+                            if (show_detail) {
+                                std::cout << process_i << " references word " << processes[i].get_R()
+                                          << " (page " << page_i << ") at time " << time_count << ": "
+                                          << "Fault, evicting page " << frame_table[0].get_PI()
+                                          << " of " << frame_table[0].get_PrI() << " from frame 0" << std::endl;
+                            }
                             frame_table[0].change_Frame(process_i, page_i);
                         }
                         else if (R.compare("random") == 0) {
-                            int index = randomEvictingFrame(pFile, frame_number);
-                            std::cout << process_i << " references word " << processes[i].get_R()
-                                      << " (page " << page_i << ") at time " << time_count << ": "
-                                      << "Fault, evicting page " << frame_table[index].get_PI()
-                                      << " of " << frame_table[index].get_PrI() << " from frame " << index << std::endl;
+                            int index = randomEvictingFrame(pFile, frame_number, show_detail);
+                            if (show_detail) {
+                                std::cout << process_i << " references word " << processes[i].get_R()
+                                          << " (page " << page_i << ") at time " << time_count << ": "
+                                          << "Fault, evicting page " << frame_table[index].get_PI()
+                                          << " of " << frame_table[index].get_PrI() << " from frame " << index << std::endl;
+                            }
                             frame_table[index].change_Frame(process_i, page_i);
                         }
                         else if (R.compare("lru") == 0) {
@@ -169,7 +177,7 @@ void Paging(FILE *pFile, std::vector<Frame> frame_table, int frame_number, std::
                                                           processes[i].get_C(),
                                                           processes[i].get_S(),
                                                           processes[i].get_R(),
-                                                          pFile));
+                                                          pFile, show_detail));
                 // if the process is done
                 processes[i].minus_one_N();
                 if (processes[i].get_N() == 0) {

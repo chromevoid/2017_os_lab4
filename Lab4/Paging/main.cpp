@@ -9,6 +9,7 @@ int main(int argc, char const *argv[]) {
         int N = atoi(argv[5]);  // the number of references for each process
         std::string R = argv[6];  // LIFO, RANDOM, or LRU
         int debugging = atoi(argv[7]);
+        bool show_detail = debugging == 0 ? false : true;
         // initiate frame table
         std::vector<Frame> frame_table;
         int frame_number = M / P;
@@ -45,16 +46,13 @@ int main(int argc, char const *argv[]) {
             processes.push_back(tmp_p4);
         }
         // do the process
-        std::cout << "Process" << std::endl;
         FILE * pFile;
         pFile = fopen ("random-numbers.txt" , "r");
         if (pFile == NULL) {
             perror ("Error opening file");
             return 0;
         }
-        if (debugging == 0) {
-            Paging(pFile, frame_table, frame_number, processes, P, R);
-        }
+        Paging(pFile, frame_table, frame_number, processes, P, R, show_detail);
         fclose (pFile);
     } else {
         std::cout << "Wrong arguments." << std::endl;
