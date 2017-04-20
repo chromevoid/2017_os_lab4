@@ -9,7 +9,7 @@ int main(int argc, char const *argv[]) {
         int N = atoi(argv[5]);  // the number of references for each process
         std::string R = argv[6];  // LIFO, RANDOM, or LRU
         int debugging = atoi(argv[7]);
-        bool show_detail = debugging == 0 ? false : true;
+        bool show_detail = debugging != 0;
         // initiate frame table
         std::vector<Frame> frame_table;
         int frame_number = M / P;
