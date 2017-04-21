@@ -9,6 +9,13 @@ int main(int argc, char const *argv[]) {
         int N = atoi(argv[5]);  // the number of references for each process
         std::string R = argv[6];  // LIFO, RANDOM, or LRU
         int debugging = atoi(argv[7]);
+        std::cout << "The machine size is " << M << ".\n"
+                  << "The page size is " << P << ".\n"
+                  << "The process size is " << S << ".\n"
+                  << "The job mix number is " << J << ".\n"
+                  << "The number of references per process is " << N << ".\n"
+                  << "The replacement algorithm is " << R << ".\n"
+                  << "The level of debugging output is " << debugging << ".\n" << std::endl;
         bool show_detail = debugging != 0;
         // initiate frame table
         std::vector<Frame> frame_table;

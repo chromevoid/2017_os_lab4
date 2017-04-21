@@ -205,7 +205,7 @@ void Paging(FILE *pFile, std::vector<Frame> frame_table, int frame_number, std::
                                 std::cout << process_i << " references word " << processes[i].get_R()
                                           << " (page " << page_i << ") at time " << time_count << ": "
                                           << "Fault, evicting page " << frame_table[lru_max_index].get_PI()
-                                          << " of " << frame_table[lru_max_index].get_PrI() << " from frame " << index << std::endl;
+                                          << " of " << frame_table[lru_max_index].get_PrI() << " from frame " << lru_max_index << std::endl;
                             }
                             frame_table[lru_max_index].change_Frame(process_i, page_i);
                         }
