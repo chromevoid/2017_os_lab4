@@ -66,8 +66,8 @@ public:
 int randomNextReference(double A, double B, double C, int S, int w, FILE *pFile, bool show_detail) {
     double y;
     unsigned int r;
-    if ( ! feof (pFile) )
-        if ( fscanf (pFile , "%i" , &r) != EOF ) {
+    if ( ! feof (pFile) ) {
+        if (fscanf(pFile, "%i", &r) != EOF) {
             if (show_detail) { std::cout << "random number: " << r << std::endl; }
             y = r / (INT_MAX + 1.0);
             if (y < A) {
@@ -80,18 +80,26 @@ int randomNextReference(double A, double B, double C, int S, int w, FILE *pFile,
                 return (w + 4) % S;
             }
             else { // a random value in 0..S-1 each with probability (1-A-B-C)/S
+                if ( ! feof (pFile) ) {
+                    if (fscanf(pFile, "%i", &r) != EOF) {
+                        if (show_detail) { std::cout << "random number: " << r << std::endl; }
+                        return (r % S);
+                    }
+                }
             }
         }
+    }
     return 0;
 }
 
 int randomEvictingFrame(FILE *pFile, int frame_number, bool show_detail) {
     unsigned int r;
-    if ( ! feof (pFile) )
-        if ( fscanf (pFile , "%i" , &r) != EOF ) {
+    if ( ! feof (pFile) ) {
+        if (fscanf(pFile, "%i", &r) != EOF) {
             if (show_detail) { std::cout << "random number: " << r << std::endl; }
             return (r % frame_number);
         }
+    }
     return 0;
 }
 
@@ -104,9 +112,17 @@ bool all_processes_are_completed(std::vector<Process> processes) {
     return true;
 }
 
+void all_lru_counts_add_one(std::vector<int> & lru_counts) {
+    for (int i = 0; i < lru_counts.size(); i++) {
+        lru_counts[i]++;
+    }
+}
+
 void Paging(FILE *pFile, std::vector<Frame> frame_table, int frame_number, std::vector<Process> processes, int P, std::string R, bool show_detail) {
     int q = 3;
     int time_count = 0;
+    bool lru = R.compare("lru") == 0;
+    std::vector<int> lru_counts(frame_table.size(), 0);
     while (!all_processes_are_completed(processes)) {
         for (int i = 0; i < processes.size(); i++) {
             for (int ref = 0; ref < q; ref++) {
@@ -120,6 +136,10 @@ void Paging(FILE *pFile, std::vector<Frame> frame_table, int frame_number, std::
                 for (int j = 0; j < frame_table.size(); j++) {
                     if (frame_table[j].find_Frame(process_i, page_i)) {
                         hit = true;
+                        if (lru) {
+                            all_lru_counts_add_one(lru_counts);
+                            lru_counts[j] = 0;
+                        }
                         if (show_detail) {
                             std::cout << process_i << " references word " << processes[i].get_R()
                                       << " (page " << page_i << ") at time " << time_count << ": "
@@ -136,6 +156,10 @@ void Paging(FILE *pFile, std::vector<Frame> frame_table, int frame_number, std::
                         if (frame_table[k].is_free()) {
                             frame_table[k].change_Frame(process_i, page_i);
                             free = true;
+                            if (lru) {
+                                all_lru_counts_add_one(lru_counts);
+                                lru_counts[k] = 0;
+                            }
                             if (show_detail) {
                                 std::cout << process_i << " references word " << processes[i].get_R()
                                           << " (page " << page_i << ") at time " << time_count << ": "
@@ -167,6 +191,23 @@ void Paging(FILE *pFile, std::vector<Frame> frame_table, int frame_number, std::
                         }
                         else if (R.compare("lru") == 0) {
                             // do something
+                            int lru_max = 0;
+                            int lru_max_index = 0;
+                            for (int k = 0; k < lru_counts.size(); k++) {
+                                if (lru_max < lru_counts[k]) {
+                                    lru_max = lru_counts[k];
+                                    lru_max_index = k;
+                                }
+                            }
+                            all_lru_counts_add_one(lru_counts);
+                            lru_counts[lru_max_index] = 0;
+                            if (show_detail) {
+                                std::cout << process_i << " references word " << processes[i].get_R()
+                                          << " (page " << page_i << ") at time " << time_count << ": "
+                                          << "Fault, evicting page " << frame_table[lru_max_index].get_PI()
+                                          << " of " << frame_table[lru_max_index].get_PrI() << " from frame " << index << std::endl;
+                            }
+                            frame_table[lru_max_index].change_Frame(process_i, page_i);
                         }
                     }
                 }
