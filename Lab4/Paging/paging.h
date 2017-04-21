@@ -121,6 +121,7 @@ void all_lru_counts_add_one(std::vector<int> & lru_counts) {
 void Paging(FILE *pFile, std::vector<Frame> frame_table, int frame_number, std::vector<Process> processes, int P, std::string R, bool show_detail) {
     int q = 3;
     int time_count = 0;
+    std::vector<int> faults_recorder(processes.size(), 0);
     bool lru = R.compare("lru") == 0;
     std::vector<int> lru_counts(frame_table.size(), 0);
     while (!all_processes_are_completed(processes)) {
@@ -150,6 +151,7 @@ void Paging(FILE *pFile, std::vector<Frame> frame_table, int frame_number, std::
                 }
                 // if not found
                 if (!hit) {
+                    faults_recorder[i]++;
                     // if free frame exists
                     bool free = false;
                     for (int k = frame_number; k >= 0; k--) {
@@ -228,7 +230,9 @@ void Paging(FILE *pFile, std::vector<Frame> frame_table, int frame_number, std::
             }
         }
     }
-
+    for (int index = 0; index < processes.size(); index++) {
+        std::cout << "Process " << index << " had " << faults_recorder[index] << " faults" << std::endl;
+    }
 }
 
 #endif //PAGING_PAGING_H
