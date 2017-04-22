@@ -14,7 +14,7 @@
 #include <deque>
 #include <queue> // std::priority_queue
 #include <algorithm>
-#include <limits>
+#include <climits>
 #include <iostream>
 
 class Frame {
