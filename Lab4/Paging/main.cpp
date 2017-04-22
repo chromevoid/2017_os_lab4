@@ -16,12 +16,12 @@ int main(int argc, char const *argv[]) {
                   << "The number of references per process is " << N << ".\n"
                   << "The replacement algorithm is " << R << ".\n"
                   << "The level of debugging output is " << debugging << ".\n" << std::endl;
-        bool show_detail = debugging != 0;
+        bool show_detail = debugging == 0;
         // initiate frame table
         std::vector<Frame> frame_table;
         int frame_number = M / P;
         for (int i = 0; i < frame_number; i++) {
-            Frame tmp_f;
+            Frame tmp_f(-1, -1);
             frame_table.push_back(tmp_f);
         }
         // initiate Process vector

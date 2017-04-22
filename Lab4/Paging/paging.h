@@ -20,7 +20,7 @@
 class Frame {
     int process_index, page_index;
 public:
-    Frame(int process_i = -1, int page_i = -1) {
+    Frame(int process_i, int page_i) {
         process_index = process_i;
         page_index = page_i;
     }
@@ -122,6 +122,13 @@ void Paging(FILE *pFile, std::vector<Frame> frame_table, int frame_number, std::
     int q = 3;
     int time_count = 0;
     std::vector<int> faults_recorder(processes.size(), 0);
+    std::vector<int> temp;
+    for (int i = 0; i < processes[0].get_S()/P; i++) {
+        temp.push_back(0);
+    }
+    std::vector<std::vector<int>> evictions_recorder(processes.size(), temp);
+    std::vector<std::vector<int>> loaded_time_recorder(processes.size(), temp);
+    std::vector<std::vector<int>> residency_recorder(processes.size(), temp);
     bool lru = R.compare("lru") == 0;
     std::vector<int> lru_counts(frame_table.size(), 0);
     while (!all_processes_are_completed(processes)) {
@@ -154,7 +161,7 @@ void Paging(FILE *pFile, std::vector<Frame> frame_table, int frame_number, std::
                     faults_recorder[i]++;
                     // if free frame exists
                     bool free = false;
-                    for (int k = frame_number; k >= 0; k--) {
+                    for (int k = frame_number - 1; k >= 0; k--) {
                         if (frame_table[k].is_free()) {
                             frame_table[k].change_Frame(process_i, page_i);
                             free = true;
@@ -162,6 +169,8 @@ void Paging(FILE *pFile, std::vector<Frame> frame_table, int frame_number, std::
                                 all_lru_counts_add_one(lru_counts);
                                 lru_counts[k] = 0;
                             }
+                            // load
+                            loaded_time_recorder[i][page_i] = time_count;
                             if (show_detail) {
                                 std::cout << process_i << " references word " << processes[i].get_R()
                                           << " (page " << page_i << ") at time " << time_count << ": "
@@ -172,6 +181,7 @@ void Paging(FILE *pFile, std::vector<Frame> frame_table, int frame_number, std::
                     }
                     // if free frame doesn't exist, then pick a victim
                     if (!free) {
+                        loaded_time_recorder[i][page_i] = time_count;
                         if (R.compare("lifo") == 0) {
                             if (show_detail) {
                                 std::cout << process_i << " references word " << processes[i].get_R()
@@ -179,6 +189,9 @@ void Paging(FILE *pFile, std::vector<Frame> frame_table, int frame_number, std::
                                           << "Fault, evicting page " << frame_table[0].get_PI()
                                           << " of " << frame_table[0].get_PrI() << " from frame 0" << std::endl;
                             }
+                            evictions_recorder[frame_table[0].get_PrI() - 1][frame_table[0].get_PI()] += 1;
+                            residency_recorder[frame_table[0].get_PrI() - 1][frame_table[0].get_PI()] +=
+                                    time_count - loaded_time_recorder[frame_table[0].get_PrI() - 1][frame_table[0].get_PI()];
                             frame_table[0].change_Frame(process_i, page_i);
                         }
                         else if (R.compare("random") == 0) {
@@ -189,6 +202,9 @@ void Paging(FILE *pFile, std::vector<Frame> frame_table, int frame_number, std::
                                           << "Fault, evicting page " << frame_table[index].get_PI()
                                           << " of " << frame_table[index].get_PrI() << " from frame " << index << std::endl;
                             }
+                            evictions_recorder[frame_table[index].get_PrI() - 1][frame_table[index].get_PI()] += 1;
+                            residency_recorder[frame_table[index].get_PrI() - 1][frame_table[index].get_PI()] +=
+                                    time_count - loaded_time_recorder[frame_table[index].get_PrI() - 1][frame_table[index].get_PI()];
                             frame_table[index].change_Frame(process_i, page_i);
                         }
                         else if (R.compare("lru") == 0) {
@@ -209,6 +225,9 @@ void Paging(FILE *pFile, std::vector<Frame> frame_table, int frame_number, std::
                                           << "Fault, evicting page " << frame_table[lru_max_index].get_PI()
                                           << " of " << frame_table[lru_max_index].get_PrI() << " from frame " << lru_max_index << std::endl;
                             }
+                            evictions_recorder[frame_table[lru_max_index].get_PrI() - 1][frame_table[lru_max_index].get_PI()] += 1;
+                            residency_recorder[frame_table[lru_max_index].get_PrI() - 1][frame_table[lru_max_index].get_PI()] +=
+                                    time_count - loaded_time_recorder[frame_table[lru_max_index].get_PrI() - 1][frame_table[lru_max_index].get_PI()];
                             frame_table[lru_max_index].change_Frame(process_i, page_i);
                         }
                     }
@@ -230,8 +249,38 @@ void Paging(FILE *pFile, std::vector<Frame> frame_table, int frame_number, std::
             }
         }
     }
+    if (show_detail) { std::cout << "\n"; }
+    int total_faults = 0;
+    int total_residency = 0;
+    int total_evictions_number = 0;
     for (int index = 0; index < processes.size(); index++) {
-        std::cout << "Process " << index << " had " << faults_recorder[index] << " faults" << std::endl;
+        total_faults += faults_recorder[index];
+        int total_residency_of_this_process = 0;
+        int total_evictions_number_of_this_process = 0;
+        for (int i = 0; i < residency_recorder[index].size(); i++) {
+            total_residency_of_this_process += residency_recorder[index][i];
+            total_evictions_number_of_this_process += evictions_recorder[index][i];
+        }
+        total_residency += total_residency_of_this_process;
+        total_evictions_number += total_evictions_number_of_this_process;
+        if (total_evictions_number_of_this_process == 0) {
+            std::cout << "Process " << index + 1 << " had " << faults_recorder[index]
+                      << " faults.\n\tWith no evictions, the average residence is undefined." << std::endl;
+        }
+        else {
+            double result = total_residency_of_this_process * 1.0 / total_evictions_number_of_this_process;
+            std::cout << "Process " << index + 1 << " had " << faults_recorder[index] << " faults and "
+                      << result << " average residency" << std::endl;
+        }
+    }
+    if (total_evictions_number == 0) {
+        std::cout << "\nThe total number of faults is " << total_faults
+                  << ".\n\tWith no evictions, the overall average residence is undefined." << std::endl;
+    }
+    else {
+        double result = total_residency * 1.0 / total_evictions_number;
+        std::cout << "\nThe total number of faults is " << total_faults
+                  << " and the overall average residency is " << result << std::endl;
     }
 }
 
